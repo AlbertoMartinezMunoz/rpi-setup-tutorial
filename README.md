@@ -362,5 +362,101 @@ To mount the `fstab` devices
 sudo mount -a
 ```
 
+## Amuled
 
+First the `amule` and the `amule-daemon` packages should be installed
 
+```shell
+sudo apt-get install amule amule-daemon
+```
+
+Once installed, run the `amuled` command the first time to create the configuration files at `~/.aMule/`
+
+```console
+pi@raspberrypi5:~ $ amuled
+ 2024-03-20 16:09:22: Initialising aMuleD 2.3.3 compiled with wxBase(GTK2) v3.2.2 and Boost 1.74
+ 2024-03-20 16:09:22: Checking if there is an instance already running...
+ 2024-03-20 16:09:22: No other instances are running.
+!2024-03-20 16:09:22: ERROR: Información  --- Es la primera vez que inicia aMule 2.3.3 ---
+!2024-03-20 16:09:22: En nuestra web podrá encontrar más información, soporte y nuevas versiones,
+!2024-03-20 16:09:22: en www.aMule.org, o en nuestro canal de IRC #aMule en irc.freenode.net.
+!2024-03-20 16:09:22: Envíenos cualquier fallo a http://forum.amule.org
+ 2024-03-20 16:09:22: Socket de escucha: correcto.
+ 2024-03-20 16:09:22: Cargando archivos temporales desde /home/pi/.aMule/Temp.
+ 2024-03-20 16:09:22: Todos los archivos de partes han sido cargados.
+ 2024-03-20 16:09:22: amuled: OnInit - iniciando el temporizador
+!2024-03-20 16:09:22: ERROR: el servicio de aMule no se puede usar cuando están desactivadas las conexiones externas. Para activarlas, use o bien un aMule normal, inicie amuled con la opción --ec-config, o bien, establezca "AcceptExternalConnections" a 1, en el archivo ~/.aMule/amule.conf
+ 2024-03-20 16:09:22: Ahora, saliendo de la aplicación principal...
+ 2024-03-20 16:09:22: aMule OnExit: terminando el núcleo.
+ 2024-03-20 16:09:22: Cierre de aMule completado.
+16:09:22: Debug: 1 threads were not terminated by the application.
+```
+
+Now the aMule can be configured. First make a copy of the current `amule.conf` file. Now the aMule ports should be changed to random values avoid blocking from some ISPs:
+
+```
+Port=4662
+UDPPort=4672
+```
+
+Also, the download of a server list from a server can be enabled
+
+```
+AddServerListFromServer=1
+```
+
+Enable connect only to secure servers
+
+```
+SafeServerConnect=1
+```
+
+Also, the files folders are changed from the normal place, to an external HDD
+
+```
+TempDir=/media/HardDisk/aMule/Temp
+IncomingDir=/media/HardDisk/aMule/Incoming
+MinFreeDiskSpace=3000
+```
+
+The server from were the Kad nodes and the Ed2k servers lists should be downloaded
+
+```
+KadNodesUrl=http://upd.emule-security.org/nodes.dat
+Ed2kServersUrl=http://upd.emule-security.org/server.met
+```
+
+Now, the web interface can be configured
+
+```
+AcceptExternalConnections=1
+ECPassword=c87ac475dba8e4522dbf573a7355dca6
+[WebServer]
+Enabled=1
+Password=c87ac475dba8e4522dbf573a7355dca6
+Port=4711
+```
+
+To start the amule daemon at boot, an user should be added on the amule-daemon configuration file at `/etc/default/amule-daemon`. To keep it simple the our user will be used.
+
+```console
+pi@raspberrypi5:~ $ sudo cat /etc/default/amule-daemon 
+# Configuration for /etc/init.d/amule-daemon
+
+# The init.d script will only run if this variable non-empty.
+AMULED_USER="pi"
+
+# You can set this variable to make the daemon use an alternative HOME.
+# The daemon will use $AMULED_HOME/.aMule as the directory, so if you
+# want to have $AMULED_HOME the real root (with an Incoming and Temp
+# directories), you can do `ln -s . $AMULED_HOME/.aMule`.
+AMULED_HOME=""
+```
+
+Now the amule daemon can be started.
+
+```shell
+sudo /etc/init.d/amule-daemon start
+```
+
+At last, the amule web interface can be accesed at [http://rpi-address:4711/](http://rpi-address:4711/)
