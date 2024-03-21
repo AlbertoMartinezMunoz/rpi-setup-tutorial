@@ -460,3 +460,91 @@ sudo /etc/init.d/amule-daemon start
 ```
 
 At last, the amule web interface can be accesed at [http://rpi-address:4711/](http://rpi-address:4711/)
+
+## Samba
+
+To share folders with remote PCs, a Samba server will be installed.
+
+```shell
+sudo apt install samba samba-common-bin 
+```
+
+Then, at the end of the configuration file `/etc/samba/smb.conf` an entry for the folders we want to share will be added. I.e. share the RPi folder.
+
+```
+# Amule downloads folder
+[aMule]
+    comment = Share Directory
+    path = /media/HardDisk/aMule/Incoming/
+    browseable = Yes
+    writeable = no
+    only guest = no
+    create mask = 0644
+    directory mask = 0755
+    public = yes
+```
+
+Then the `smbd` daemon should be restarted to load the new configuration.
+
+```shell
+sudo service smbd restart
+```
+
+After that the `testparm` command can be used to check the Samba server services:
+
+```console
+pi@raspberrypi5:~ $ testparm 
+Load smb config files from /etc/samba/smb.conf
+Loaded services file OK.
+Weak crypto is allowed by GnuTLS (e.g. NTLM as a compatibility fallback)
+
+Server role: ROLE_STANDALONE
+
+Press enter to see a dump of your service definitions
+
+# Global parameters
+[global]
+	log file = /var/log/samba/log.%m
+	logging = file
+	map to guest = Bad User
+	max log size = 1000
+	obey pam restrictions = Yes
+	pam password change = Yes
+	panic action = /usr/share/samba/panic-action %d
+	passwd chat = *Enter\snew\s*\spassword:* %n\n *Retype\snew\s*\spassword:* %n\n *password\supdated\ssuccessfully* .
+	passwd program = /usr/bin/passwd %u
+	server role = standalone server
+	unix password sync = Yes
+	usershare allow guests = Yes
+	idmap config * : backend = tdb
+
+
+[homes]
+	browseable = No
+	comment = Home Directories
+	create mask = 0700
+	directory mask = 0700
+	valid users = %S
+
+
+[printers]
+	browseable = No
+	comment = All Printers
+	create mask = 0700
+	path = /var/tmp
+	printable = Yes
+
+
+[print$]
+	comment = Printer Drivers
+	path = /var/lib/samba/printers
+
+
+[aMule]
+	comment = Share Directory
+	create mask = 0644
+	guest ok = Yes
+	path = /media/HardDisk/aMule/Incoming/
+```
+
+**THIS SAMBA SETUP IS NOT SECURE, MORE STEPS SHOULD BE TAKEN TO SECURE IT**
