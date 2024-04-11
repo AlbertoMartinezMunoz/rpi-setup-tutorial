@@ -560,4 +560,8 @@ Press enter to see a dump of your service definitions
 	path = /media/HardDisk/aMule/Incoming/
 ```
 
+Then, to access the samba folder from remote clients, the address should be used is:
+
+`smb://<samba_ip_address>/<samba_folder_name>`
+
 **THIS SAMBA SETUP IS NOT SECURE, MORE STEPS SHOULD BE TAKEN TO SECURE IT**
