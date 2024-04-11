@@ -146,6 +146,12 @@ iptables -A OUTPUT -p udp --sport 34608 -j ACCEPT
 
 ## AMULED
 ## SERVERS
+# eMule Sunrise
+iptables -A OUTPUT -p tcp -d 176.123.5.89 --dport 4725 -j ACCEPT
+iptables -A INPUT -p tcp -s 176.123.5.89 --sport 4725 -j ACCEPT
+# eMule Security
+iptables -A OUTPUT -p tcp -d 45.82.80.155 --dport 5687 -j ACCEPT
+iptables -A INPUT -p tcp -s 45.82.80.155 --sport 5687 -j ACCEPT
 # GrupoTS Server
 iptables -A OUTPUT -p tcp -d 46.105.126.71 --dport 4661 -j ACCEPT
 iptables -A INPUT -p tcp -s 46.105.126.71 --sport 4661 -j ACCEPT
@@ -390,6 +396,13 @@ pi@raspberrypi5:~ $ amuled
  2024-03-20 16:09:22: aMule OnExit: terminando el núcleo.
  2024-03-20 16:09:22: Cierre de aMule completado.
 16:09:22: Debug: 1 threads were not terminated by the application.
+```
+
+First set a bandwidth limitation to avoid saturate the connection
+
+```
+MaxUpload=10
+MaxDownload=50
 ```
 
 Now the aMule can be configured. First make a copy of the current `amule.conf` file. Now the aMule ports should be changed to random values avoid blocking from some ISPs:
