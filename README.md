@@ -565,3 +565,53 @@ Then, to access the samba folder from remote clients, the address should be used
 `smb://<samba_ip_address>/<samba_folder_name>`
 
 **THIS SAMBA SETUP IS NOT SECURE, MORE STEPS SHOULD BE TAKEN TO SECURE IT**
+
+## Disable WiFi Power Save
+
+In some distributions, the power save feature is enabled for the WiFi interface:
+
+```console
+pi@raspberrypi5:~ $ iw wlan0 get power_save
+Power save: on
+```
+
+To avoid the WiFi getting disconnected every time, the power saving feature should be disabled:
+
+```console
+pi@raspberrypi5:~ $ iwconfig wlan0 power off
+pi@raspberrypi5:~ $ iw wlan0 get power_save
+Power save: off
+```
+
+To persist this setting after reboot, the disabling command can be added to `/etc/rc.local` to disable it each time the RPi starts. The disabling command is:
+
+```bash
+/sbin/iwconfig wlan0 power off
+```
+
+And the `/etc/rc.local` file will look like:
+
+```bash
+#!/bin/sh -e
+#
+# rc.local
+#
+# This script is executed at the end of each multiuser runlevel.
+# Make sure that the script will "exit 0" on success or any other
+# value on error.
+#
+# In order to enable or disable this script just change the execution
+# bits.
+#
+# By default this script does nothing.
+
+# Print the IP address
+_IP=$(hostname -I) || true
+if [ "$_IP" ]; then
+  printf "My IP address is %s\n" "$_IP"
+fi
+
+/sbin/iwconfig wlan0 power off
+
+exit 0
+```
