@@ -281,7 +281,19 @@ sudo apt-get update
 sudo apt-get install mdadm
 ```
 
-### Move RAID 1 from another machine
+### Disabling USB Current Limitation
+
+To be able to connect two USB hard disks directly to the RPi, the USB current limitation should be removed from the RPi using the RPi configuration tool.
+
+```shell
+sudo raspi-config
+```
+
+Then the USB power limit can be disabled following these menus inside the raspi-config tool: `Performance Options > USB Current >Would you like the USB current limit to be disabled? > Yes`
+
+This way, given the RPi PSU is powerful enough, two USB hard disks can be connected directly to the RPi without using an external powered USB hub in the middle.
+
+### Move RAID 1 from Another Machine
 
 The `mdadm` configuration file should be edited. First a backup of the file is created just in case...
 
