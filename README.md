@@ -113,6 +113,10 @@ iptables -A OUTPUT -p tcp --dport 443 -j ACCEPT
 #iptables -A INPUT -p tcp --dport 34609: -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 #iptables -A OUTPUT -p tcp --sport 34609: -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 
+## ICMP (ping)
+iptables -A INPUT -p icmp -s 192.168.1.1 -d 0/0 -m limit --limit 1/minute --limit-burst 2 -j ACCEPT
+iptables -A OUTPUT -p icmp -s 0/0 -d 192.168.1.1 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+
 ## DNS Server
 iptables -A INPUT -p udp --sport 53 -j ACCEPT
 iptables -A OUTPUT -p udp --dport 53 -j ACCEPT
@@ -578,7 +582,9 @@ Then, to access the samba folder from remote clients, the address should be used
 
 **THIS SAMBA SETUP IS NOT SECURE, MORE STEPS SHOULD BE TAKEN TO SECURE IT**
 
-## Disable WiFi Power Save
+## WiFi Setup
+
+### Disable WiFi Power Save
 
 In some distributions, the power save feature is enabled for the WiFi interface:
 
@@ -626,4 +632,110 @@ fi
 /sbin/iwconfig wlan0 power off
 
 exit 0
+```
+
+### Wifi Keep Alive
+
+It can happen that the network's router will drop the RPi's connection. To avoid this, a small crontab entry can be created so the RPi will ping the router once each five minutes or so...
+
+For this hack to work, the ping should be available on the iptables firewall:
+
+```shell
+## ICMP (ping)
+iptables -A INPUT -p icmp -s 192.168.1.1 -d 0/0 -m limit --limit 1/minute --limit-burst 2 -j ACCEPT
+iptables -A OUTPUT -p icmp -s 0/0 -d 192.168.1.1 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+```
+
+Then, we will add a new schedule in the crontab for root.
+
+```shell
+sudo crontab -e
+```
+
+Then add the line `*/5 * * * * /bin/ping -c 1 192.168.1.1` at the end of the file, followed by an empty line.
+
+After doing this, the crontab contents can be checked.
+
+```console
+pi@raspberrypi5:~ $ sudo crontab -l
+# Edit this file to introduce tasks to be run by cron.
+# 
+# Each task to run has to be defined through a single line
+# indicating with different fields when the task will be run
+# and what command to run for the task
+# 
+# To define the time you can provide concrete values for
+# minute (m), hour (h), day of month (dom), month (mon),
+# and day of week (dow) or use '*' in these fields (for 'any').
+# 
+# Notice that tasks will be started based on the cron's system
+# daemon's notion of time and timezones.
+# 
+# Output of the crontab jobs (including errors) is sent through
+# email to the user the crontab file belongs to (unless redirected).
+# 
+# For example, you can run a backup of all your user accounts
+# at 5 a.m every week with:
+# 0 5 * * 1 tar -zcf /var/backups/home.tgz /home/
+# 
+# For more information see the manual pages of crontab(5) and cron(8)
+# 
+# m h  dom mon dow   command
+*/5 * * * * /bin/ping -c 1 192.168.1.1
+pi@raspberrypi5:~ $ 
+```
+
+### Wifi Restart
+
+In case the "keep alive" hack doesn't work, another hack for monitoring the wifi connection and restarting it again in case it has been droped.
+
+First a script for checking the connectivity and restarting it again should be created. The canonical location for it will be inside `/usr/local/sbin` the script will be launched by cron so we will create a cron folder for the cron scripts. The final path for the script will be  `/usr/local/sbin/cron/restart-network.sh`:
+
+```shell
+#!/bin/bash
+# restart NetworkManager when wlan0 is disconnected
+
+if [ "$(nmcli -g GENERAL.STATE dev show wlan0)" = "30 (disconnected)" ]; then
+	echo "wlan0 disconnected"
+	systemctl restart NetworkManager
+fi
+```
+
+We will add a new schedule in the crontab for root.
+
+```shell
+sudo crontab -e
+```
+
+Then add the line `*/2 * * * * /usr/local/sbin/cron/restart-network.sh` at the end of the file, followed by an empty line.
+
+After doing this, the crontab contents can be checked.
+
+```console
+pi@raspberrypi5:~ $ sudo crontab -l
+# Edit this file to introduce tasks to be run by cron.
+# 
+# Each task to run has to be defined through a single line
+# indicating with different fields when the task will be run
+# and what command to run for the task
+# 
+# To define the time you can provide concrete values for
+# minute (m), hour (h), day of month (dom), month (mon),
+# and day of week (dow) or use '*' in these fields (for 'any').
+# 
+# Notice that tasks will be started based on the cron's system
+# daemon's notion of time and timezones.
+# 
+# Output of the crontab jobs (including errors) is sent through
+# email to the user the crontab file belongs to (unless redirected).
+# 
+# For example, you can run a backup of all your user accounts
+# at 5 a.m every week with:
+# 0 5 * * 1 tar -zcf /var/backups/home.tgz /home/
+# 
+# For more information see the manual pages of crontab(5) and cron(8)
+# 
+# m h  dom mon dow   command
+*/2 * * * * /usr/local/sbin/cron/restart-network.sh
+pi@raspberrypi5:~ $ 
 ```
