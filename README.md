@@ -689,7 +689,11 @@ pi@raspberrypi5:~ $
 
 In case the "keep alive" hack doesn't work, another hack for monitoring the wifi connection and restarting it again in case it has been droped.
 
-First a script for checking the connectivity and restarting it again should be created. The canonical location for it will be inside `/usr/local/sbin` the script will be launched by cron so we will create a cron folder for the cron scripts. The final path for the script will be  `/usr/local/sbin/cron/restart-network.sh`:
+First a script for checking the connectivity and restarting it again should be created. The canonical location for it will be inside `/usr/local/sbin` the script will be launched by cron so we will create a cron folder for the cron scripts.
+
+A log for the system will be added each time the network manager is reset. This way, the date of the last restart of the network manager due to the wlan0 issue can be readed using `dmesg`.
+
+The final path for the script will be  `/usr/local/sbin/cron/restart-network.sh`:
 
 ```shell
 #!/bin/bash
@@ -698,7 +702,9 @@ First a script for checking the connectivity and restarting it again should be c
 if [ "$(nmcli -g GENERAL.STATE dev show wlan0)" = "30 (disconnected)" ]; then
 	echo "wlan0 disconnected"
 	systemctl restart NetworkManager
+	echo "wifi: $(date). wifi restart" | tee /dev/kmsg
 fi
+
 ```
 
 We will add a new schedule in the crontab for root.
