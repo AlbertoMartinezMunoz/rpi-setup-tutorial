@@ -102,6 +102,10 @@ iptables -A OUTPUT -p tcp --sport 22 -j ACCEPT
 iptables -A INPUT -p tcp --sport 443 -j ACCEPT
 iptables -A OUTPUT -p tcp --dport 443 -j ACCEPT
 
+## HTTPS SERVER
+iptables -A INPUT -p tcp --dport 443 -j ACCEPT
+iptables -A OUTPUT -p tcp --sport 443 -j ACCEPT
+
 ## FTP SERVER
 #iptables -A PREROUTING -t raw -p tcp --dport 21 -j CT --helper ftp
 #iptables -A INPUT -p tcp --dport 21 -m conntrack --ctstate ESTABLISHED,NEW -j ACCEPT
